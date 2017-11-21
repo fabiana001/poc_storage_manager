@@ -11,16 +11,15 @@ import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.hbase.{CellUtil, HBaseConfiguration, HBaseTestingUtility, TableName}
 import org.apache.hadoop.hdfs.MiniDFSCluster
 import org.apache.spark.sql.SparkSession
+import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import org.slf4j.{Logger, LoggerFactory}
-import org.specs2.mutable.Specification
-import org.specs2.specification.BeforeAfterAll
 import shaded.org.hbase.async.HBaseClient
 
 import scala.collection.convert.decorateAsJava._
 import scala.collection.convert.decorateAsScala._
 import scala.util.{Failure, Try}
 
-class OpenTSDBControllerSpec extends Specification with BeforeAfterAll {
+class OpenTSDBControllerSpec extends FlatSpec with Matchers with BeforeAndAfterAll {
 
   var miniCluster: Try[MiniDFSCluster] = Failure[MiniDFSCluster](new Exception)
 
@@ -54,7 +53,6 @@ class OpenTSDBControllerSpec extends Specification with BeforeAfterAll {
       FileUtils.deleteDirectory(dir)
     }
 
-
     baseConf = hbaseUtil.getConfiguration
     hbaseUtil.getConfiguration.set("test.hbase.zookeeper.property.clientPort", "2181")
 
@@ -83,11 +81,10 @@ class OpenTSDBControllerSpec extends Specification with BeforeAfterAll {
     config.overrideConfig("batchSize", "10")
     config.disableCompactions()
 
-
     tsdb = new TSDB(hbaseAsyncClient, config)
     alogger.info("Created the hbase client and the opentsdb object")
 
-    Range(1,100).foreach(n => tsdb.addPoint(metric, System.currentTimeMillis(), n.toDouble, Map("pippotag" -> "pippovalue").asJava).joinUninterruptibly())
+    Range(1, 100).foreach(n => tsdb.addPoint(metric, System.currentTimeMillis(), n.toDouble, Map("pippotag" -> "pippovalue").asJava).joinUninterruptibly())
 
     alogger.info("Added data points into hbase")
 
@@ -98,7 +95,6 @@ class OpenTSDBControllerSpec extends Specification with BeforeAfterAll {
 
   }
 
-
   override def afterAll(): Unit = {
     sparkSession.stop()
     tsdb.shutdown()
@@ -108,7 +104,6 @@ class OpenTSDBControllerSpec extends Specification with BeforeAfterAll {
     hbaseUtil.deleteTable("tsdb-meta")
     hbaseUtil.shutdownMiniCluster()
   }
-
 
   def scanHbase(): Unit = {
     val connection = hbaseUtil.getConnection
@@ -124,8 +119,8 @@ class OpenTSDBControllerSpec extends Specification with BeforeAfterAll {
   private def printRow(result: Result): Unit = {
     val cells = result.rawCells()
 
-    print( Bytes.toString(result.getRow) + " : " )
-    cells.foreach{ cell =>
+    print(Bytes.toString(result.getRow) + " : ")
+    cells.foreach { cell =>
       val col_name = Bytes.toString(CellUtil.cloneQualifier(cell))
       val col_value = Bytes.toString(CellUtil.cloneValue(cell))
       val col_timestamp = cell.getTimestamp
@@ -135,21 +130,11 @@ class OpenTSDBControllerSpec extends Specification with BeforeAfterAll {
     println()
   }
 
-
-
-  "The storage_manager" should {
-    "read data from opentsdb" in {
-
-       val df = openTSDBController.readData(metric, Map.empty[String, String], None)
-       df.isSuccess must_== true
-       df.get.take(10).foreach(x => alogger.info(x.toString()))
-       df.get.count() must be_==(99L)
-
-    }
+  "A Storage manager" should s"read data from table $metric in opentsdb" in {
+    val df = openTSDBController.readData(metric, Map.empty[String, String], None)
+    //This enable to test that the result is of type Success
+    df shouldBe 'Success
+    df.get.count() should equal(99L)
   }
-
-
 }
-
-
 

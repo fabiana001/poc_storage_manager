@@ -127,6 +127,7 @@ resolvers ++= Seq(
 
 libraryDependencies ++= Seq(
   //Test Dependencies
-  "org.specs2" %% "specs2-core" % spec2Version % "test",
+  "org.scalatest" %% "scalatest" % "3.0.4" % "test",
+  "org.scalactic" %% "scalactic" % "3.0.4" % "test",
   "com.github.pathikrit" %% "better-files" % betterFilesVersion % Test)
   .map(x => x.exclude("org.scalactic", "scalactic")) ++ sparkLibraries ++ hbaseLibraries ++ kuduLibraries ++ logLibraries

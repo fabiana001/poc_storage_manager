@@ -109,11 +109,16 @@ val hbaseLibraries = Seq (
 
 val kuduLibraries = Seq(
   "org.apache.kudu" % "kudu-client" % kuduVersion % "compile",
+  //to remove
+  "org.apache.kudu" % "kudu-client" % kuduVersion % "test" classifier "tests" ,
+  "org.apache.kudu" % "kudu-client" % kuduVersion % "test" classifier "tests" extra "type" -> "test-jar",
+  //
+  "com.github.docker-java" % "docker-java" % "3.0.14" % "test",
   "org.apache.kudu" %% "kudu-spark2" % kuduVersion % "compile",
 )
 
 dependencyOverrides ++= Seq(
-  "com.google.guava" % "guava" % "12.0.1" % "test",
+  //"com.google.guava" % "guava" % "16.0.1" % "test",
   "com.google.guava" % "guava" % "12.0.1" % "compile"
 )
 

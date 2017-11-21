@@ -1,21 +1,14 @@
 package it.teamdigitale
 
-import org.apache.kudu.client.{AsyncKuduClient, CreateTableOptions, KuduClient, MiniKuduCluster}
-import org.apache.kudu.spark.kudu.KuduContext
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.scalatest.{BeforeAndAfterAll, FlatSpec, Matchers}
 import org.slf4j.{Logger, LoggerFactory}
-import org.specs2.mutable.Specification
-import org.specs2.specification.BeforeAfterAll
-import com.github.dockerjava.api.DockerClient
-import com.github.dockerjava.core.DockerClientBuilder
 import services.DockerContainer
-
-import scala.util.{Failure, Success, Try}
 
 /**
   * Since MiniKuduCluster requires a compiled 'kudu' binary. For this reason we use to test Kudu docker-java library.
   */
-class KuduControllerSpec2  extends Specification with BeforeAfterAll {
+class KuduControllerSpec2  extends FlatSpec with Matchers with BeforeAndAfterAll {
 
   //var  miniCluster: MiniKuduCluster = _
 
@@ -104,8 +97,7 @@ class KuduControllerSpec2  extends Specification with BeforeAfterAll {
 
 
 
-  "KuduController" should {
-    "Correctly read data from kudu" in {
+  "KuduController" should "Correctly read data from kudu" in {
 
       alogger.info("In Body")
 // see here https://github.com/cloudera/kudu/blob/master/java/kudu-client/src/test/java/org/apache/kudu/client/BaseKuduTest.java
@@ -116,8 +108,8 @@ class KuduControllerSpec2  extends Specification with BeforeAfterAll {
 //      newDf.get.collect().toSet must_== df.collect().toSet
 
       alogger.info(s"container $containerId")
-      ok
+      //ok
     }
-  }
+
 
 }

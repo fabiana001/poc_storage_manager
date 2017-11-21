@@ -10,8 +10,6 @@ import org.apache.hadoop.hbase.client.{Result, ResultScanner, Scan, Table}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.hbase.{CellUtil, HBaseConfiguration, HBaseTestingUtility, TableName}
 import org.apache.hadoop.hdfs.MiniDFSCluster
-import org.apache.hadoop.test.PathUtils
-import org.apache.spark.opentsdb.OpenTSDBContext
 import org.apache.spark.sql.SparkSession
 import org.slf4j.{Logger, LoggerFactory}
 import org.specs2.mutable.Specification
@@ -47,18 +45,15 @@ class OpenTSDBControllerSpec extends Specification with BeforeAfterAll {
   override def beforeAll(): Unit = {
 
     val dataDirectory = System.getProperty("java.io.tmpdir")
-    println(dataDirectory)
+
     val dir = new java.io.File(dataDirectory, "zookeeper")
-    println(dir.toString)
+
+    alogger.info(s"Zookeeper tmp dir: ${dir.toString}")
     if (dir.exists()) {
       alogger.info(s"Deleting dir ${dir.toString}")
       FileUtils.deleteDirectory(dir)
     }
 
-
-    OpenTSDBContext.saltWidth = 1
-    OpenTSDBContext.saltBuckets = 2
-    OpenTSDBContext.preloadUidCache = true
 
     baseConf = hbaseUtil.getConfiguration
     hbaseUtil.getConfiguration.set("test.hbase.zookeeper.property.clientPort", "2181")
@@ -71,10 +66,8 @@ class OpenTSDBControllerSpec extends Specification with BeforeAfterAll {
     sparkSession = SparkSession.builder().master("local").getOrCreate()
     HBaseConfiguration.merge(sparkSession.sparkContext.hadoopConfiguration, baseConf)
 
-
     val quorum = baseConf.get("hbase.zookeeper.quorum")
     val port = baseConf.get("hbase.zookeeper.property.clientPort")
-
 
     hbaseUtil.createTable(TableName.valueOf("tsdb-uid"), Array("id", "name"))
     hbaseUtil.createTable(TableName.valueOf("tsdb"), Array("t"))
@@ -98,11 +91,10 @@ class OpenTSDBControllerSpec extends Specification with BeforeAfterAll {
 
     alogger.info("Added data points into hbase")
 
-
     openTSDBController = new OpenTSDBController(sparkSession)
 
     //uncomment if you want be sure that data are correctly stored
-    scanHbase()
+    //scanHbase()
 
   }
 
@@ -150,8 +142,8 @@ class OpenTSDBControllerSpec extends Specification with BeforeAfterAll {
 
        val df = openTSDBController.readData(metric, Map.empty[String, String], None)
        df.isSuccess must_== true
-       alogger.info(s"${df.get.collect.size}")
-       df.get.count() must be_==(100L)
+       df.get.take(10).foreach(x => alogger.info(x.toString()))
+       df.get.count() must be_==(99L)
 
     }
   }

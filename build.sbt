@@ -1,9 +1,9 @@
 import Versions._
-import sbt.{ExclusionRule, ModuleID}
+import sbt.{ExclusionRule, ModuleID, Resolver}
 
 name := "poc_storage_manager"
 
-version := "0.1"
+version := "1.0-SNAPSHOT"
 
 scalaVersion := "2.11.12"
 
@@ -107,9 +107,21 @@ val hbaseLibraries = Seq (
   hadoopHBaseExcludes("org.apache.hadoop" % "hadoop-mapreduce-client-jobclient" % hadoopVersion % "test" classifier "tests")
 )
 
+val kuduLibraries = Seq(
+  "org.apache.kudu" % "kudu-client" % kuduVersion % "compile",
+  "org.apache.kudu" %% "kudu-spark2" % kuduVersion % "compile",
+)
+
 dependencyOverrides ++= Seq(
   "com.google.guava" % "guava" % "12.0.1" % "test",
   "com.google.guava" % "guava" % "12.0.1" % "compile"
+)
+
+resolvers ++= Seq(
+  Resolver.mavenLocal,
+  Resolver.sonatypeRepo("releases"),
+  "cloudera" at "https://repository.cloudera.com/artifactory/cloudera-repos/",
+  "daf repo" at "http://nexus.default.svc.cluster.local:8081/repository/maven-public/"
 )
 
 
@@ -117,4 +129,4 @@ libraryDependencies ++= Seq(
   //Test Dependencies
   "org.specs2" %% "specs2-core" % spec2Version % "test",
   "com.github.pathikrit" %% "better-files" % betterFilesVersion % Test)
-  .map(x => x.exclude("org.scalactic", "scalactic")) ++ sparkLibraries ++ hbaseLibraries ++ logLibraries
+  .map(x => x.exclude("org.scalactic", "scalactic")) ++ sparkLibraries ++ hbaseLibraries ++ kuduLibraries ++ logLibraries

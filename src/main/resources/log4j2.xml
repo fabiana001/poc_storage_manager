@@ -35,7 +35,7 @@
         <Logger name="it.teamdigitale" level="info">
             <AppenderRef ref="File"/>
             <AppenderRef ref="FileError" level="error"/>
-            <AppenderRef ref="Console"/>
+            <!--AppenderRef ref="Console"/-->
         </Logger>
         <Root level="ERROR">
             <AppenderRef ref="Console"/>

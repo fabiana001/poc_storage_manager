@@ -9,42 +9,77 @@ trait DatasetOperations {
   def defaultLimit: Int
 
   /**
-    *
-    * @param df
-    * @param condition
-    * @return a valid condition
-    */
+   *
+   * @param df
+   * @param condition
+   * @return a valid condition
+   */
   //FIXME validate the condition
   def where(df: Try[DataFrame], condition: String): Try[DataFrame] = {
     df.map(_.where(condition))
   }
 
-  def select(df: Try[DataFrame], column: String): Try[DataFrame] =
+  private def validateColumns(df: Try[DataFrame], columns: Set[String]): Try[DataFrame] = {
     df.flatMap { d =>
-      if (d.columns.toSet.contains(column)) Success(d.select(column))
-      else Failure(new IllegalArgumentException(s"Column $column not found in ${d.columns}"))
+      if (columns.diff(d.columns.toSet).isEmpty) Success(d)
+      else Failure(new IllegalArgumentException(s"Columns $columns not found in ${d.columns}"))
     }
-
-  /**
-    *
-    * @param df the dataframe
-    * @param column the column to aggregate
-    * @param aggregationFun a valid aggregation function in Set("count", "max", "mean", "min", "sum")
-    * @return
-    */
-  def groupBy(df: Try[DataFrame], column: String, aggregationFun: String): Try[DataFrame] = {
-    for {
-      aggregation <- AggregationsValidator.validate(aggregationFun)
-      d <- df
-    } yield d.groupBy(column).agg(column -> aggregation)
   }
 
   /**
+   *
+   * @param df
+   * @param column
+   * @return a dataset with only the selected column
+   */
+  def select(df: Try[DataFrame], column: String): Try[DataFrame] = {
+    validateColumns(df, Set(column))
+      .map(_.select(column))
+  }
+
+  def select(df: Try[DataFrame], col: String, cols: String*): Try[DataFrame] = {
+    val columns: Seq[String] = cols :+ col
+    validateColumns(df, columns.toSet)
+      .map(_.select(col, cols:_*))
+  }
+
+  type Column = String
+  type Func = String
+  type GroupExpr = (Column, Func)
+
+  /**
     *
-    * @param df
-    * @param limit
+    * @param df a dataframe
+    * @param column the column used for the aggregation
+    * @param groupByOps a list of valid aggregations expression in the form (column,func) where func is in in Set("count", "max", "mean", "min", "sum")
     * @return
     */
+  def groupBy(df: Try[DataFrame], column: String, groupByOps: GroupExpr*): Try[DataFrame] = {
+
+    val validatedAggrs = groupByOps.map(kv => AggregationsValidator.validate(kv._2))
+
+    val failureMsg = validatedAggrs.filter(_.isFailure)
+      .map {
+        case Failure(ex) => ex.getMessage
+        case Success(_) => ""
+      }.mkString("[", ",", "]")
+
+    //if there are not validations errors
+    if (validatedAggrs.forall(_.isSuccess)) {
+
+      val columns: Seq[String] = groupByOps.map(_._1) :+ column
+      validateColumns(df, columns.toSet)
+        .map(_.groupBy(column).agg(groupByOps.toMap))
+
+    } else Failure(new IllegalArgumentException(failureMsg))
+  }
+
+  /**
+   *
+   * @param df
+   * @param limit
+   * @return
+   */
   def limit(df: Try[DataFrame], limit: Int = defaultLimit): Try[DataFrame] =
     df.map(_.limit(limit))
 }

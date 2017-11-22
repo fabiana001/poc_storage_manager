@@ -22,6 +22,14 @@ class DatasetOperationsSpec extends FlatSpec with Matchers with BeforeAndAfterAl
     val result = DatasetOperations.select(Try(employees), "salary")
     result shouldBe 'Success
     result.get.count() should be > 0L
+    result.foreach(_.show())
+  }
+
+  it should "select on multiple columns" in {
+    val result = DatasetOperations.select(Try(employees), "salary", "type")
+    result shouldBe 'Success
+    result.get.count() should be > 0L
+    result.foreach(_.show())
   }
 
   it should "return an error if a non valid column is selected" in {
@@ -33,6 +41,7 @@ class DatasetOperationsSpec extends FlatSpec with Matchers with BeforeAndAfterAl
     val result = DatasetOperations.where(Try(employees), "salary > 1000")
     result shouldBe 'Success
     result.get.count() === 2L
+    result.foreach(_.show())
   }
 
   it should "return an error for a invalid where condition" in {
@@ -41,13 +50,24 @@ class DatasetOperationsSpec extends FlatSpec with Matchers with BeforeAndAfterAl
   }
 
   it should "aggregate correctly for column -> count" in {
-    val result = DatasetOperations.groupBy(Try(employees), "salary", "count")
+    val result = DatasetOperations.groupBy(Try(employees), "type", "salary" -> "count")
+    result shouldBe 'Success
+    result.foreach(_.show())
+  }
+
+  it should "aggregate correctly for multiple conditions" in {
+    // Selects the age of the oldest employee and then aggregate salary for each type payment
+    val result = DatasetOperations.groupBy(
+      df = Try(employees),
+      column = "type",
+      groupByOps = "age" -> "max", "salary" -> "mean")
+
     result shouldBe 'Success
     result.foreach(_.show())
   }
 
   it should "return an error for a invalid groupBy condition" in {
-    val result = DatasetOperations.groupBy(Try(employees), "salary", "avg")
+    val result = DatasetOperations.groupBy(Try(employees), "type", "salay" -> "avg")
     result shouldBe 'Failure
   }
 
@@ -55,5 +75,6 @@ class DatasetOperationsSpec extends FlatSpec with Matchers with BeforeAndAfterAl
     val result = DatasetOperations.limit(Try(employees), 2)
     result shouldBe 'Success
     result.get.count() === 2L
+    result.foreach(_.show())
   }
 }

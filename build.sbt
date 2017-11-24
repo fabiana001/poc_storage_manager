@@ -7,6 +7,9 @@ version := "1.0-SNAPSHOT"
 
 scalaVersion := "2.11.12"
 
+fork in Test := true
+javaOptions ++= Seq("-Xms4000M", "-Xmx4000M", "-XX:+CMSClassUnloadingEnabled")
+
 val sparkExcludes =
   (moduleId: ModuleID) => moduleId.
     exclude("org.apache.hadoop", "hadoop-client").
@@ -23,10 +26,11 @@ val sparkExcludes =
 val sparkLibraries = Seq(
   sparkExcludes("org.apache.spark" %% "spark-core" % sparkVersion % "compile"),
   sparkExcludes("org.apache.spark" %% "spark-sql" % sparkVersion % "compile"),
-  sparkExcludes("org.apache.spark" %% "spark-yarn" % sparkVersion % "compile"),
-  sparkExcludes("org.apache.spark" %% "spark-mllib" % sparkVersion % "compile"),
+  //sparkExcludes("org.apache.spark" %% "spark-yarn" % sparkVersion % "compile"),
+  //sparkExcludes("org.apache.spark" %% "spark-mllib" % sparkVersion % "compile"),
   sparkExcludes("org.apache.spark" %% "spark-streaming" % sparkVersion % "compile"),
-  sparkExcludes("org.apache.spark" %% "spark-streaming-kafka-0-10" % sparkVersion % "compile"),
+  "com.databricks" %% "spark-avro" % "4.0.0" % "compile"
+  //sparkExcludes("org.apache.spark" %% "spark-streaming-kafka-0-10" % sparkVersion % "compile"),
 )
 
 val hadoopExcludes =
@@ -113,13 +117,15 @@ val kuduLibraries = Seq(
   "org.apache.kudu" % "kudu-client" % kuduVersion % "test" classifier "tests" ,
   "org.apache.kudu" % "kudu-client" % kuduVersion % "test" classifier "tests" extra "type" -> "test-jar",
   //
-  "com.github.docker-java" % "docker-java" % "3.0.14" % "test",
+  "com.github.docker-java" % "docker-java" % "3.0.13" % "test",
   "org.apache.kudu" %% "kudu-spark2" % kuduVersion % "compile",
 )
 
 dependencyOverrides ++= Seq(
   //"com.google.guava" % "guava" % "16.0.1" % "test",
-  "com.google.guava" % "guava" % "12.0.1" % "compile"
+  //usefull for docker-java
+  "org.apache.httpcomponents" % "httpcore" % "4.4.5" % "compile",
+  "com.google.guava" % "guava" % "16.0.1" % "compile"
 )
 
 resolvers ++= Seq(

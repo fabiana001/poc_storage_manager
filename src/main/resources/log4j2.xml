@@ -37,7 +37,7 @@
             <AppenderRef ref="FileError" level="error"/>
             <!--AppenderRef ref="Console"/-->
         </Logger>
-        <Root level="ERROR">
+        <Root level="error">
             <AppenderRef ref="Console"/>
         </Root>
     </Loggers>

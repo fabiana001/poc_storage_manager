@@ -7,7 +7,6 @@ import scala.util.{Failure, Success, Try}
 trait DatasetOperations {
 
   def defaultLimit: Int
-
   /**
    *
    * @param df

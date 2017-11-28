@@ -1,8 +1,8 @@
 import Versions._
 import sbt.{ExclusionRule, ModuleID, Resolver}
 
-name := "poc_storage_manager"
-
+name := "storage-manager-core"
+organization := "it.gov.daf"
 version := "1.0-SNAPSHOT"
 
 scalaVersion := "2.11.12"
@@ -10,8 +10,7 @@ scalaVersion := "2.11.12"
 fork in Test := true
 javaOptions ++= Seq("-Xms4000M", "-Xmx4000M", "-XX:+CMSClassUnloadingEnabled")
 
-val sparkExcludes =
-  (moduleId: ModuleID) => moduleId.
+def sparkExcludes(moduleId: ModuleID) = moduleId.
     exclude("org.apache.hadoop", "hadoop-client").
     exclude("org.apache.hadoop", "hadoop-yarn-client").
     exclude("org.apache.hadoop", "hadoop-yarn-api").
@@ -33,8 +32,7 @@ val sparkLibraries = Seq(
   //sparkExcludes("org.apache.spark" %% "spark-streaming-kafka-0-10" % sparkVersion % "compile"),
 )
 
-val hadoopExcludes =
-  (moduleId: ModuleID) => moduleId.
+def hadoopExcludes(moduleId: ModuleID) = moduleId.
     exclude("org.slf4j", "slf4j-api").
     exclude("org.slf4j", "slf4j-log4j12").
     exclude("org.mortbay.jetty", "jetty").
@@ -44,16 +42,14 @@ val hadoopExcludes =
     exclude("org.apache.logging.log4j", "log4j-slf4j-impl").
     exclude("org.slf4j", "slf4j-log4j12")
 
-val hadoopHBaseExcludes =
-  (moduleId: ModuleID) => moduleId.
+def hadoopHBaseExcludes(moduleId: ModuleID) = moduleId.
     exclude("org.slf4j", "slf4j-log4j12").
     exclude("javax.servlet", "servlet-api").
     exclude("org.apache.logging.log4j", "log4j-slf4j-impl").
     exclude("org.slf4j", "slf4j-log4j12").
     excludeAll(ExclusionRule(organization = "javax.servlet"))
 
-val hbaseExcludes =
-  (moduleID: ModuleID) => moduleID.
+def hbaseExcludes(moduleID: ModuleID) = moduleID.
     exclude("org.apache.thrift", "thrift").
     exclude("org.jruby", "jruby-complete").
     exclude("org.slf4j", "slf4j-log4j12").
@@ -137,8 +133,10 @@ resolvers ++= Seq(
 
 
 libraryDependencies ++= Seq(
+  "org.slf4j" % "slf4j-api" % "1.7.25",
+  "org.slf4j" % "slf4j-nop" % "1.7.25" % "test",
   //Test Dependencies
   "org.scalatest" %% "scalatest" % "3.0.4" % "test",
   "org.scalactic" %% "scalactic" % "3.0.4" % "test",
   "com.github.pathikrit" %% "better-files" % betterFilesVersion % Test)
-  .map(x => x.exclude("org.scalactic", "scalactic")) ++ sparkLibraries ++ hbaseLibraries ++ kuduLibraries ++ logLibraries
+  .map(x => x.exclude("org.scalactic", "scalactic")) ++ sparkLibraries ++ hbaseLibraries ++ kuduLibraries
